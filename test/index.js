@@ -66,13 +66,15 @@ describe('rehype-postcss', () => {
     const source = '<style>.test { color: red</style>'
     const sourceFileName = 'test.html'
 
-    await assert.rejects(() => run(source))
+    const options = {
+      plugins: [autoprefixer()],
+      options: { from: sourceFileName },
+    }
+
+    await assert.rejects(() => run(source, options))
 
     try {
-      await run(source, {
-        plugins: [autoprefixer()],
-        options: { from: sourceFileName },
-      })
+      await run(source, options)
     } catch (error) {
       const logMessage = 'Error does not report source file name'
       assert(error.message.includes(sourceFileName), logMessage)
