@@ -70,6 +70,7 @@ describe('rehype-postcss', () => {
 
     try {
       await run(source, {
+        plugins: [autoprefixer()],
         options: { from: sourceFileName },
       })
     } catch (error) {
