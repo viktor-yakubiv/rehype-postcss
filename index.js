@@ -7,6 +7,7 @@ const attach = ({
   plugins = [],
   options: userOptions = {},
   context: configContext,
+  test: userTest,
 } = {}) => {
   const transform = async (tree, file) => {
     const fileUrl = file.path ?? file.history[file.history.length - 1]
@@ -40,9 +41,12 @@ const attach = ({
 
     const elementTest = node =>
       (node.type == 'element') &&
-      ((node.tagName == 'style') && (node.children.length > 0))
+      ((node.tagName == 'style') && (node.children.length > 0)) &&
+      (typeof userTest == 'function' ? userTest(node) : true)
 
-    const attributeTest = node => node.properties?.style
+    const attributeTest = node =>
+      node.properties?.style &&
+      (typeof userTest == 'function' ? userTest(node) : true)
 
     const elementVisitor = node => {
       const promise = process(node.children[0].value)

@@ -162,6 +162,18 @@ The initial default options are:
 > there is no way to know
 > where the result is going to be saved.
 
+###### `options.test`
+
+Test to define which elements should be processed.
+The test must be a function;
+if it's anything else, it is ignored.
+The default (no test)
+is to process all `<style>` elements
+and any element with a `style` attribute.
+If the option is passed,
+it will be filtering out from the list of selected nodes
+by the default test.
+
 ## Types
 
 This package is not typed with [TypeScript][].
@@ -195,8 +207,6 @@ This plugin was inspired by [posthtml-postcss][].
 [unified]: https://github.com/unifiedjs/unified
 
 [rehype]: https://github.com/rehypejs/rehype
-
-[hast-util-is-element]: https://github.com/syntax-tree/hast-util-is-element
 
 [postcss]: https://github.com/postcss/postcss
 

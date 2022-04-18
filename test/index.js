@@ -80,4 +80,22 @@ describe('rehype-postcss', () => {
       assert(error.message.includes(sourceFileName), logMessage)
     }
   })
+
+  it('allows user to pass custom testing function', async () => {
+    const test = node =>
+      (node.type == 'element') &&
+      ((node.properties.type || 'test/css') == 'text/css')
+
+    const source = `
+      <style>a {display: flex;}</style>
+      <style type="text/css">a {display: flex;}</style>
+      <style type="text/scss">a {display: flex;}</style>
+    `
+    const expected = `
+      <style>a {display: -ms-flexbox;display: flex;}</style>
+      <style type="text/css">a {display: -ms-flexbox;display: flex;}</style>
+      <style type="text/scss">a {display: flex;}</style>
+    `
+    await test(source, expected, { test })
+  })
 })
