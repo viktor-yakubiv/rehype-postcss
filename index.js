@@ -50,8 +50,29 @@ const attach = ({
 
     const elementVisitor = node => {
       const promise = process(node.children[0].value)
+        // Replace the value
         .then(result => {
           node.children[0].value = result.css
+          return result
+        })
+
+        // Store raw PostCSS Result in data for possible future use
+        .then(result => {
+          node.data = Object.assign(node.data ?? {}, {
+            postcss: result,
+          })
+          return result
+        })
+
+        // For convenience, combine all exports into an `exports` object
+        .then(result => {
+          const exportEntries = result.messages
+            .filter(({ type }) => type == 'export')
+            .map(message => [message.plugin, message.exportTokens])
+          const exports = Object.fromEntries(exportEntries)
+
+          node.data = Object.assign(node.data ?? {}, { exports })
+
           return result
         })
 

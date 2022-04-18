@@ -1,13 +1,19 @@
 import assert from 'assert'
 import path from 'path'
-import { rehype } from 'rehype'
 
+// Unified
+import { unified } from 'unified'
+import parser from 'rehype-parse'
+import compiler from 'rehype-stringify'
+
+// PostCSS
 import autoprefixer from 'autoprefixer'
+import modules from 'postcss-modules'
 import postcss from '../index.js'
 
 const defaultOptions = {
   plugins: [
-    autoprefixer({ overrideBrowserslist: ['ie >= 10'] })
+    autoprefixer({ overrideBrowserslist: ['ie >= 10'] }),
   ],
 
   options: {
@@ -17,8 +23,9 @@ const defaultOptions = {
 }
 
 describe('rehype-postcss', () => {
-  const run = (file, options) => rehype()
-    .data({ settings: { fragment: true } })
+  const run = (file, options) => unified()
+    .use(parser, { fragment: true })
+    .use(compiler)
     .use(postcss, options)
     .process(file)
     .then(result => result.value)
@@ -79,6 +86,49 @@ describe('rehype-postcss', () => {
       const logMessage = 'Error does not report source file name'
       assert(error.message.includes(sourceFileName), logMessage)
     }
+  })
+
+  it('exports raw result into `node.data.postcss`', async () => {
+    const source = '<style>.scoped { color: #000 }</style>'
+
+    const sourceTree = await unified()
+      .use(parser, { fragment: true })
+      .parse(source)
+
+    const resultTree = await unified()
+      .use(postcss, defaultOptions)
+      .run(sourceTree)
+
+    const receivedNode = resultTree.children[0]
+    const received = receivedNode.data
+
+    assert(received.postcss != null,
+      'The <style> node\'s data does not have `postcss`')
+
+    assert(received.postcss?.processor != null,
+      'The <style> node\'s data.postcss has unexpected content')
+  })
+
+  it('exports tokens into `node.data.exports`', async () => {
+    const source = '<style>.scoped { color: #000 }</style>'
+
+    const sourceTree = await unified()
+      .use(parser, { fragment: true })
+      .parse(source)
+
+    const resultTree = await unified()
+      .use(postcss, { plugins: [modules({ getJSON: () => {} })]})
+      .run(sourceTree)
+
+    const receivedNode = resultTree.children[0]
+    const received = receivedNode.data
+
+    assert('exports' in received,
+      'The <style> node\'s data does not have `exports`')
+    assert('postcss-modules' in received?.exports,
+      'The <style> node does not have include exported data from the plugin')
+    assert('scoped' in received?.exports?.['postcss-modules'],
+      'The <style> node does not have .scoped class name exported')
   })
 
   it('allows user to pass custom testing function', async () => {
